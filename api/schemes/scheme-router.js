@@ -19,10 +19,10 @@ router.get('/:id', (req, res) => {
 
   Schemes.findById(id)
     .then(scheme => {
-      if (scheme) {
-        res.json(scheme);
-      } else {
+      if (!scheme) {
         res.status(404).json({ message: 'Could not find scheme with given id.' })
+      } else {
+        res.json(scheme);
       }
     })
     .catch(err => {
@@ -78,24 +78,16 @@ router.post('/:id/steps', (req, res) => {
     });
 });
 
-router.put('/:id', (req, res) => {
-  const { id } = req.params;
-  const changes = req.body;
-
-  Schemes.findById(id)
-    .then(scheme => {
-      if (scheme) {
-        return Schemes.update(changes, id);
-      } else {
-        res.status(404).json({ message: 'Could not find scheme with given id' });
-      }
-    })
-    .then(updatedScheme => {
-      res.json(updatedScheme);
-    })
-    .catch(err => {
-      res.status(500).json({ message: 'Failed to update scheme' });
-    });
+router.put('/:id', async (req, res) => {
+  try {
+    const { id } = req.params
+    const changes = req.body
+    await Schemes.update(id, changes)
+    const updated = await Schemes.findById(id)
+    res.json(updated)
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
 });
 
 router.delete('/:id', (req, res) => {
